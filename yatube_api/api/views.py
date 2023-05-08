@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import PermissionDenied
 from rest_framework import viewsets, permissions
+from rest_framework import filters
 from djoser.views import UserViewSet
 
 
@@ -21,12 +21,11 @@ class CustomUserViewSet(UserViewSet):
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [IsOwnerOrReadOnly]
-    pagination_class = LimitOffsetPagination 
+    permission_classes = [IsOwnerOrReadOnly, ]
+    pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -50,13 +49,19 @@ class CommentViewSet(viewsets.ModelViewSet):
         post = get_object_or_404(Post, pk=post_id)
         serializer.save(author=self.request.user, post=post)
 
+
 class FollowViewSet(viewsets.ModelViewSet):
-    queryset = Follow.objects.all
     serializer_class = FollowSerializer
-    permission_classes = [ IsOwnerOrReadOnly,]
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('user__username', 'following__username')
 
     def get_queryset(self):
-        user=self.request.user
-        return Post.objects.filter(author__following__user=user)
+        return Follow.objects.filter(user=self.request.user)
 
-
+    def perform_create(self, serializer):
+        following_id = serializer.validated_data.get('following')
+        print(following_id)
+        following = User.objects.get(username=following_id)
+        print(following)
+        serializer.save(user=self.request.user, following=following)

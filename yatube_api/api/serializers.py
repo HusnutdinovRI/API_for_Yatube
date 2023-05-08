@@ -40,6 +40,24 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class FollowSerializer(serializers.ModelSerializer):
 
+    user = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    following = serializers.SlugRelatedField(queryset=User.objects.all(),
+                                             slug_field="username")
+
     class Meta:
-        fields = ('__all__')
+        fields = ('user', 'following')
         model = Follow
+
+    def validate(self, validated_data):
+        user = self.context['request'].user
+        print(user)
+        following = Follow.objects.filter(
+            user=user, following=validated_data['following'])
+        print(len(following))
+        if user == validated_data['following']:
+            raise serializers.ValidationError(
+                'Ошибка! Нельзя подписаться на себя')
+        if len(following) > 0:
+            raise serializers.ValidationError(
+                'Ошибка! Нельзя подписаться на автора два раза')
+        return validated_data
