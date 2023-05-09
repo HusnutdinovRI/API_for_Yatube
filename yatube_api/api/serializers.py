@@ -1,8 +1,22 @@
+import base64
+
 from rest_framework import serializers
 
 from djoser.serializers import UserSerializer
 
+from django.core.files.base import ContentFile
+
 from posts.models import Group, Post, Comment, User, Follow
+
+
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+
+        return super().to_internal_value(data)
 
 
 class CustomUserSerializer(UserSerializer):
@@ -21,6 +35,7 @@ class GroupSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField()
+    image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         fields = ('__all__')
@@ -50,10 +65,8 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def validate(self, validated_data):
         user = self.context['request'].user
-        print(user)
         following = Follow.objects.filter(
             user=user, following=validated_data['following'])
-        print(len(following))
         if user == validated_data['following']:
             raise serializers.ValidationError(
                 'Ошибка! Нельзя подписаться на себя')
