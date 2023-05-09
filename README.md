@@ -97,6 +97,7 @@ python3 manage.py runserver
 ```
 GET /api/v1/posts/
 ```
+**Ответ**
 ```
 [
     {
