@@ -245,4 +245,11 @@ GET /api/v1/follow/
 ]
 ```
 
+## Технолгии
+
+-   [Python](https://www.python.org/)  - язык программирования.
+-   [Django](https://www.djangoproject.com/)  - свободный фреймворк для веб-приложений на языке Python.
+-   [Django REST Framework](https://www.django-rest-framework.org/)  - мощный и гибкий набор инструментов для создания веб-API.
+-   [SimpleJWT] - это JSON Web Token плагин для аутентификации в Django REST Framework.
+
 
